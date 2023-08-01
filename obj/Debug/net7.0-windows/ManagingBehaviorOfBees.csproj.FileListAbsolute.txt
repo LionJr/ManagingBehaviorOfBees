@@ -19,3 +19,4 @@ C:\dotnet\C#\HeadFirst\ManagingBehaviorOfBees\obj\Debug\net7.0-windows\refint\Ma
 C:\dotnet\C#\HeadFirst\ManagingBehaviorOfBees\obj\Debug\net7.0-windows\ManagingBehaviorOfBees.pdb
 C:\dotnet\C#\HeadFirst\ManagingBehaviorOfBees\obj\Debug\net7.0-windows\ManagingBehaviorOfBees.genruntimeconfig.cache
 C:\dotnet\C#\HeadFirst\ManagingBehaviorOfBees\obj\Debug\net7.0-windows\ref\ManagingBehaviorOfBees.dll
+C:\dotnet\C#\HeadFirst\ManagingBehaviorOfBees\obj\Debug\net7.0-windows\GeneratedInternalTypeHelper.g.cs

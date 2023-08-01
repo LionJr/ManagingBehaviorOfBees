@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.ComponentModel;
 
 namespace ManagingBehaviorOfBees
 {
@@ -22,11 +23,11 @@ namespace ManagingBehaviorOfBees
   public partial class MainWindow : Window
   {
     private DispatcherTimer timer = new DispatcherTimer();
-    private Queen queen = new Queen();
+    private readonly Queen queen;
     public MainWindow()
     {
       InitializeComponent();
-      statusReport.Text = queen.StatusReport;
+      queen = Resources["queen"] as Queen;
 
       timer.Tick += Timer_Tick;
       timer.Interval = TimeSpan.FromSeconds(1.5);
@@ -97,9 +98,14 @@ namespace ManagingBehaviorOfBees
       } 
     }
   }
-  class Bee
+  interface IWorker
   {
-    public virtual float CostPerShift {get;}
+    string Job {get;}
+    void WorkTheNextShift();
+  }
+  abstract class Bee : IWorker
+  {
+    public abstract float CostPerShift {get;}
     public string Job {get; private set;}
     public Bee(string job)
     {
@@ -110,7 +116,7 @@ namespace ManagingBehaviorOfBees
       if(HoneyVault.ConsumeHoney(CostPerShift))
         DoJob();
     }
-    protected virtual void DoJob() { /* This method will be overrided by subclass */ }
+    protected abstract void DoJob();
   }
   class NectarCollector : Bee
   {
@@ -140,15 +146,20 @@ namespace ManagingBehaviorOfBees
       HoneyVault.ConvertNectarToHoney(NECTAR_PROCESSED_PER_SHIFT);
     }
   }
-  class Queen : Bee
+  class Queen : Bee, INotifyPropertyChanged
   {
     public const float EGGS_PER_SHIFT = 0.45F;
     public const float HONEY_PER_UNASSIGNED_WORKER = 0.5F;
-    private Bee[] workers = new Bee[0];
+    private IWorker[] workers = new IWorker[0];
     private float eggs = 0;
     private float unassignedWorkers = 3;
     public string StatusReport {get; private set;} = "";
     private float costPerShift = 2.15F;
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string name)
+    {
+      PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(name));
+    }    
     public override float CostPerShift
     {
       get {return costPerShift;}
@@ -159,7 +170,7 @@ namespace ManagingBehaviorOfBees
       AssingBee("Honey Manufacturer");
       AssingBee("Egg Care");
     }
-    private void AddWorker(Bee worker)
+    private void AddWorker(IWorker worker)
     {
       if(unassignedWorkers >= 1)
       {
@@ -171,7 +182,7 @@ namespace ManagingBehaviorOfBees
     private string WorkerStatus(string job)
     {
       int count = 0;
-      foreach(Bee worker in workers)
+      foreach(IWorker worker in workers)
         if(worker.Job==job) count++;
       string s = "s";
       if(count==1) s="";
@@ -183,6 +194,7 @@ namespace ManagingBehaviorOfBees
                      + $"\nEgg count: {eggs:0.0}\nUnassigned workers: {unassignedWorkers:0.0}\n"
                      + $"{WorkerStatus("Nectar Collector")}\n{WorkerStatus("Honey Manufacturer")}"
                      + $"\n{WorkerStatus("Egg Care")}\nTOTAL WORKERS: {workers.Length}";
+                     OnPropertyChanged("StatusReport");
     }
     public void CareForEggs(float eggsToConvert)
     {
@@ -211,7 +223,7 @@ namespace ManagingBehaviorOfBees
     protected override void DoJob()
     {
       eggs += EGGS_PER_SHIFT;
-      foreach(Bee worker in workers)
+      foreach(IWorker worker in workers)
       {
         worker.WorkTheNextShift();
       }
